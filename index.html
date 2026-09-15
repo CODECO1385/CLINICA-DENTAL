@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smile Dental Clinic — Reservar cita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12312B;
+    --teal:#0E5750;
+    --teal-dark:#0A3F3A;
+    --mint:#EAF4F1;
+    --mint-2:#DCEEE8;
+    --paper:#FBFAF7;
+    --coral:#E8623F;
+    --coral-dark:#C94E2E;
+    --line:#D8E3DF;
+    --grey:#6B7B77;
+    --ok:#2F8A5B;
+    --ok-bg:#E7F5EC;
+    --warn-bg:#FDECE7;
+    --radius-lg:20px;
+    --radius-md:12px;
+    --radius-sm:8px;
+    --shadow:0 20px 40px -24px rgba(18,49,43,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:linear-gradient(180deg,var(--mint) 0%, var(--mint-2) 100%);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:48px 20px;
+  }
+  .stage{
+    width:100%;
+    max-width:1100px;
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:56px;
+    align-items:flex-start;
+  }
+  @media (max-width:880px){
+    .stage{grid-template-columns:1fr;}
+    .brandcol{order:2;}
+  }
+
+  /* Brand / context column */
+  .brandcol{padding-top:12px;}
+  .eyebrow-mark{
+    display:flex;align-items:center;gap:10px;margin-bottom:28px;
+  }
+  .tooth-icon{width:34px;height:34px;flex-shrink:0;}
+  .clinic-name{font-family:'Newsreader',serif;font-size:20px;font-weight:600;letter-spacing:-0.01em;}
+  h1.hero{
+    font-family:'Newsreader',serif;
+    font-weight:500;
+    font-size:clamp(34px,4.2vw,52px);
+    line-height:1.06;
+    letter-spacing:-0.015em;
+    margin:0 0 20px;
+    max-width:11ch;
+  }
+  h1.hero em{font-style:italic;color:var(--teal);}
+  .hero-sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--grey);
+    max-width:44ch;
+    margin:0 0 36px;
+  }
+  .info-strip{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    border-top:1px solid var(--line);
+    padding-top:24px;
+    max-width:420px;
+  }
+  .info-row{display:flex;gap:14px;align-items:flex-start;}
+  .info-row svg{flex-shrink:0;margin-top:2px;color:var(--teal);}
+  .info-row .label{font-size:12.5px;color:var(--grey);margin-bottom:2px;}
+  .info-row .value{font-size:15px;font-weight:500;}
+
+  /* Card / phone-like flow column */
+  .card{
+    background:var(--paper);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    border:1px solid rgba(18,49,43,0.06);
+    overflow:hidden;
+    min-height:560px;
+    display:flex;
+    flex-direction:column;
+  }
+  .card-header{
+    padding:22px 26px 0;
+  }
+  .back-row{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;
+  }
+  .back-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:none;border:none;cursor:pointer;
+    font-family:'Inter';font-size:14px;font-weight:500;color:var(--teal);
+    padding:6px 4px;
+    visibility:hidden;
+  }
+  .back-btn.show{visibility:visible;}
+  .step-track{display:flex;gap:6px;}
+  .step-dot{
+    width:26px;height:4px;border-radius:2px;background:var(--line);
+    transition:background .25s ease;
+  }
+  .step-dot.active{background:var(--teal);}
+  .step-dot.done{background:var(--teal);opacity:.45;}
+  .step-meta{font-size:12.5px;color:var(--grey);margin-bottom:4px;}
+  .step-title{
+    font-family:'Newsreader',serif;font-weight:500;font-size:24px;
+    margin:0 0 4px;letter-spacing:-0.01em;
+  }
+  .step-desc{font-size:14px;color:var(--grey);margin:0 0 18px;}
+
+  .card-body{
+    padding:6px 26px 26px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .panel{display:none;flex-direction:column;flex:1;animation:fade .35s ease;}
+  .panel.active{display:flex;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* Top-level views: role gate / patient flow / staff login / staff dashboard.
+     Same show/hide + fade pattern as .panel, kept as a separate class so the
+     patient flow's internal step panels can keep working exactly as before. */
+  .view{display:none;flex-direction:column;flex:1;animation:fade .35s ease;}
+  .view.active{display:flex;}
+
+  /* Role gate — "Soy paciente" / "Soy dentista" */
+  .role-list{display:flex;flex-direction:column;gap:14px;margin-top:4px;}
+  .role-card{
+    border:1.5px solid var(--line);border-radius:var(--radius-md);
+    background:#fff;padding:20px;display:flex;flex-direction:column;gap:14px;
+  }
+  .role-top{display:flex;align-items:center;gap:14px;}
+  .role-icon{
+    width:44px;height:44px;border-radius:50%;background:var(--mint-2);
+    display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;
+  }
+  .role-title{font-family:'Newsreader',serif;font-weight:600;font-size:16.5px;}
+  .role-desc{font-size:13px;color:var(--grey);margin-top:2px;}
+  .role-card .primary-btn, .role-card .secondary-btn{width:100%;}
+
+  /* Staff login */
+  .remember-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .checkbox-label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);cursor:pointer;}
+  .checkbox-label input{width:15px;height:15px;accent-color:var(--teal);cursor:pointer;}
+  .link-btn{background:none;border:none;color:var(--teal);font-size:13px;font-weight:500;cursor:pointer;padding:0;text-decoration:underline;}
+
+  /* Staff dashboard — expands the stage to full width since it's a desktop
+     admin panel, not the phone-style booking card used elsewhere on the site */
+  .stage.stage--wide{grid-template-columns:1fr;}
+  .stage.stage--wide .brandcol{display:none;}
+  .stage.stage--wide .card{width:100%;min-height:0;}
+
+  .dash-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+  .dash-title .clinic-name{display:block;}
+  .dash-header-right{display:flex;align-items:center;gap:10px;}
+  .dash-date{font-size:12.5px;color:var(--grey);}
+  .icon-btn{
+    width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;
+    color:var(--grey);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+  }
+  .icon-btn:hover{border-color:var(--teal);color:var(--teal);}
+  .avatar-badge{
+    width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+  }
+
+  .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+  @media (max-width:760px){.dash-stats{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{border:1px solid var(--line);border-radius:var(--radius-md);background:#fff;padding:16px;}
+  .stat-icon{
+    width:30px;height:30px;border-radius:50%;background:var(--mint-2);color:var(--teal);
+    display:flex;align-items:center;justify-content:center;margin-bottom:10px;
+  }
+  .stat-label{font-size:12.5px;color:var(--grey);margin-bottom:6px;}
+  .stat-value{font-family:'Newsreader',serif;font-size:26px;font-weight:600;margin-bottom:4px;}
+  .stat-delta{font-size:11.5px;font-weight:600;}
+  .stat-delta.positive{color:var(--ok);}
+  .stat-delta.negative{color:var(--coral-dark);}
+  .stat-delta.neutral{color:var(--grey);}
+
+  .dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;align-items:start;}
+  @media (max-width:820px){.dash-grid{grid-template-columns:1fr;}}
+  .dash-panel{border:1px solid var(--line);border-radius:var(--radius-md);background:#fff;padding:18px;}
+  .dash-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .dash-panel-head h3{font-family:'Newsreader',serif;font-weight:600;font-size:16px;margin:0;}
+  .dash-panel-meta{font-size:12px;color:var(--grey);}
+
+  .appt-list{display:flex;flex-direction:column;gap:10px;}
+  .appt-row{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;flex-wrap:wrap;}
+  .appt-row.cancelled{opacity:.5;}
+  .appt-time{font-size:13px;font-weight:600;color:var(--teal-dark);width:64px;flex-shrink:0;}
+  .appt-info{flex:1;min-width:140px;}
+  .appt-name{font-size:14px;font-weight:600;}
+  .appt-detail{font-size:12.5px;color:var(--grey);margin-top:1px;}
+  .appt-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .appt-btn{border-radius:999px;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;border:1px solid transparent;font-family:'Inter';}
+  .appt-btn.confirm{background:var(--teal);color:#fff;}
+  .appt-btn.confirm:hover{background:var(--teal-dark);}
+  .appt-btn.reschedule{background:#fff;border-color:var(--line);color:var(--ink);}
+  .appt-btn.reschedule:hover{border-color:var(--teal);}
+  .appt-btn.cancel{background:#fff;border-color:var(--coral);color:var(--coral-dark);}
+  .appt-btn.cancel:hover{background:var(--warn-bg);}
+  .tag-urgent{background:var(--coral);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle;}
+  .tag-status{font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:999px;}
+  .tag-confirmed{background:var(--ok-bg);color:var(--ok);}
+  .tag-cancelled{background:var(--warn-bg);color:var(--coral-dark);}
+
+  .overview-chart{margin:4px 0 14px;}
+  .trend-label{font-size:13px;font-weight:600;margin-bottom:2px;}
+  .trend-note{font-size:12.5px;color:var(--grey);}
+  .dash-divider{border-top:1px solid var(--line);margin:14px 0;}
+  .staff-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  .staff-row{display:flex;align-items:center;gap:10px;}
+  .staff-avatar{
+    width:30px;height:30px;border-radius:50%;background:var(--mint-2);color:var(--teal);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;
+  }
+  .staff-info{flex:1;}
+  .staff-name{font-size:13.5px;font-weight:600;}
+  .staff-role{font-size:12px;color:var(--grey);}
+  .staff-active-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0;}
+  .next-appt-banner{
+    background:var(--mint);border:1px solid var(--mint-2);border-radius:var(--radius-sm);
+    padding:10px 12px;font-size:12.5px;color:var(--teal-dark);font-weight:500;
+  }
+
+  /* Step 0 — home / services teaser */
+  .service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  .service-tile{
+    border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:14px 8px;text-align:center;background:#fff;
+  }
+  .service-tile svg{margin-bottom:8px;color:var(--teal);}
+  .service-tile span{font-size:12.5px;font-weight:500;display:block;}
+
+  .primary-btn{
+    background:var(--teal);color:#fff;border:none;border-radius:999px;
+    padding:15px 22px;font-family:'Inter';font-size:15.5px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:background .15s ease, transform .1s ease;
+    width:100%;
+  }
+  .primary-btn:hover{background:var(--teal-dark);}
+  .primary-btn:active{transform:scale(0.98);}
+  .primary-btn:disabled{background:#B9C8C4;cursor:not-allowed;}
+  .primary-btn.coral{background:var(--coral);}
+  .primary-btn.coral:hover{background:var(--coral-dark);}
+
+  .ghost-note{text-align:center;font-size:12.5px;color:var(--grey);margin-top:14px;}
+
+  /* Step 1 — select service */
+  .option-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;overflow-y:auto;}
+  .option-card{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    border:1.5px solid var(--line);border-radius:var(--radius-md);
+    padding:14px 16px;background:#fff;cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    text-align:left;
+  }
+  .option-card:hover{border-color:var(--teal);}
+  .option-card.selected{border-color:var(--teal);background:var(--mint);}
+  .option-left{display:flex;align-items:center;gap:12px;}
+  .option-icon{
+    width:38px;height:38px;border-radius:50%;background:var(--mint-2);
+    display:flex;align-items:center;justify-content:center;color:var(--teal);flex-shrink:0;
+  }
+  .option-name{font-size:15px;font-weight:600;}
+  .option-meta{font-size:12.5px;color:var(--grey);margin-top:2px;}
+  .option-price{font-size:14.5px;font-weight:600;color:var(--teal);white-space:nowrap;}
+
+  /* Step 2 — patient info */
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:var(--radius-sm);
+    padding:11px 13px;font-family:'Inter';font-size:14.5px;background:#fff;color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* Step 3 — date & time */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-nav{background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--teal);display:flex;align-items:center;justify-content:center;}
+  .cal-month{font-family:'Newsreader';font-weight:600;font-size:16px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+  .cal-dow{font-size:11px;color:var(--grey);text-align:center;padding-bottom:4px;}
+  .cal-day{
+    aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    font-size:13.5px;border-radius:50%;cursor:pointer;color:var(--ink);
+  }
+  .cal-day.disabled{color:#C7D2CE;cursor:default;}
+  .cal-day.today{border:1px solid var(--teal);}
+  .cal-day.selected{background:var(--teal);color:#fff;font-weight:600;}
+  .cal-day:not(.disabled):not(.selected):hover{background:var(--mint-2);}
+  .times-label{font-size:12.5px;font-weight:600;margin:16px 0 8px;}
+  .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .time-slot{
+    border:1.5px solid var(--line);border-radius:var(--radius-sm);
+    padding:10px 6px;text-align:center;font-size:13.5px;font-weight:500;
+    background:#fff;cursor:pointer;color:var(--ink);
+  }
+  .time-slot.selected{border-color:var(--teal);background:var(--mint);color:var(--teal-dark);font-weight:600;}
+  .time-slot.booked{background:#F1F1EF;color:#B5B5AF;cursor:not-allowed;text-decoration:line-through;border-color:var(--line);}
+
+  /* Step 4 — confirmation */
+  .confirm-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;flex:1;justify-content:center;}
+  .check-badge{
+    width:66px;height:66px;border-radius:50%;background:var(--ok-bg);
+    display:flex;align-items:center;justify-content:center;color:var(--ok);margin-bottom:18px;
+  }
+  .confirm-title{font-family:'Newsreader';font-weight:500;font-size:24px;margin:0 0 6px;}
+  .confirm-sub{font-size:14px;color:var(--grey);margin:0 0 22px;}
+  .summary-box{
+    width:100%;border:1px solid var(--line);border-radius:var(--radius-md);
+    background:#fff;padding:16px 18px;text-align:left;margin-bottom:18px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .summary-row{display:flex;gap:12px;align-items:flex-start;font-size:14px;}
+  .summary-row svg{color:var(--teal);flex-shrink:0;margin-top:1px;}
+  .summary-row .s-label{color:var(--grey);font-size:11.5px;display:block;}
+  .summary-row .s-value{font-weight:600;}
+  .confirm-actions{display:flex;gap:10px;width:100%;}
+  .secondary-btn{
+    flex:1;border:1.5px solid var(--teal);color:var(--teal);background:#fff;
+    border-radius:999px;padding:13px 14px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .secondary-btn:hover{background:var(--mint);}
+  .new-booking{background:none;border:none;color:var(--grey);font-size:13px;margin-top:16px;cursor:pointer;text-decoration:underline;}
+
+  .error-text{color:var(--coral-dark);font-size:12.5px;margin-top:-8px;margin-bottom:10px;display:none;}
+  .error-text.show{display:block;}
+
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- ============ LEFT: brand / context column ============ -->
+  <div class="brandcol">
+    <div class="eyebrow-mark" onclick="goHome()" style="cursor:pointer;" title="Volver al inicio">
+      <svg class="tooth-icon" viewBox="0 0 24 24" fill="none" stroke="#0E5750" stroke-width="1.6"><path d="M12 3c-2.2 0-3 1.1-4.3 1.1S5.2 3 4 3c-1.6 0-2 1.7-2 3.2 0 3 .9 6.8 2.1 9.7.6 1.5 1.2 3.1 2.3 3.1 1.3 0 1.3-2.7 1.9-4.6.3-1 .7-1.9 1.7-1.9s1.4.9 1.7 1.9c.6 1.9.6 4.6 1.9 4.6 1.1 0 1.7-1.6 2.3-3.1C17.1 13 18 9.2 18 6.2 18 4.7 17.6 3 16 3c-1.2 0-2.4 1.1-3.7 1.1S12 3 12 3z"/></svg>
+      <span class="clinic-name">Smile Dental Clinic</span>
+    </div>
+
+    <h1 class="hero">Reserva tu cita <em>sin llamadas</em>, en menos de un minuto</h1>
+    <p class="hero-sub">Elige tu tratamiento, escoge el horario que te acomode y recibe confirmación al instante. Así de simple.</p>
+
+    <div class="info-strip">
+      <div class="info-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <div><div class="label">Dirección</div><div class="value">123 Maple Ave, Suite 200, Austin, TX 78701</div></div>
+      </div>
+      <div class="info-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <div><div class="label">Horario</div><div class="value">Lun – Vie · 8:00 a.m. – 6:00 p.m.</div></div>
+      </div>
+      <div class="info-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .3 2 .7 3a2 2 0 01-.4 2.1L8.1 10a16 16 0 006 6l1.2-1.3a2 2 0 012.1-.4c1 .3 2 .5 3 .7a2 2 0 011.6 2z"/></svg>
+        <div><div class="label">Teléfono</div><div class="value">(512) 555-0148</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RIGHT: booking flow card ============ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="back-row">
+        <button class="back-btn" id="backBtn" onclick="handleBack()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          Atrás
+        </button>
+        <div class="step-track" id="stepTrack"></div>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- ============================================================
+           HOME / ROLE GATE — new entry point, shown first on page load
+           ============================================================ -->
+      <div class="view active" id="view-role">
+        <div class="step-meta">Bienvenido</div>
+        <h2 class="step-title">Welcome to Smile Dental Clinic</h2>
+        <p class="step-desc">How would you like to continue?</p>
+
+        <div class="role-list">
+          <div class="role-card">
+            <div class="role-top">
+              <div class="role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3c-2.2 0-3 1.1-4.3 1.1S5.2 3 4 3c-1.6 0-2 1.7-2 3.2 0 3 .9 6.8 2.1 9.7.6 1.5 1.2 3.1 2.3 3.1 1.3 0 1.3-2.7 1.9-4.6.3-1 .7-1.9 1.7-1.9s1.4.9 1.7 1.9c.6 1.9.6 4.6 1.9 4.6 1.1 0 1.7-1.6 2.3-3.1C17.1 13 18 9.2 18 6.2 18 4.7 17.6 3 16 3c-1.2 0-2.4 1.1-3.7 1.1S12 3 12 3z"/></svg>
+              </div>
+              <div>
+                <div class="role-title">I'm a Patient</div>
+                <div class="role-desc">Book or manage your dental appointment</div>
+              </div>
+            </div>
+            <button class="primary-btn" onclick="enterPatientFlow()">Continue as Patient</button>
+          </div>
+
+          <div class="role-card">
+            <div class="role-top">
+              <div class="role-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+              </div>
+              <div>
+                <div class="role-title">I'm Dentist / Staff</div>
+                <div class="role-desc">Access the clinic scheduling dashboard</div>
+              </div>
+            </div>
+            <button class="secondary-btn" onclick="enterStaffLogin()">Staff Login</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           PATIENT FLOW — unchanged, only wrapped in a #view-patient
+           container so it can be shown/hidden alongside the new views
+           ============================================================ -->
+      <div class="view" id="view-patient">
+
+      <!-- STEP 0: Home / entry -->
+      <div class="panel active" id="panel-0">
+        <div class="step-meta">Panel del paciente</div>
+        <h2 class="step-title">Hola, bienvenido/a</h2>
+        <p class="step-desc">Estos son nuestros servicios más solicitados.</p>
+        <div class="service-grid">
+          <div class="service-tile">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c-2.2 0-3 1.1-4.3 1.1S5.2 3 4 3c-1.6 0-2 1.7-2 3.2 0 3 .9 6.8 2.1 9.7.6 1.5 1.2 3.1 2.3 3.1 1.3 0 1.3-2.7 1.9-4.6.3-1 .7-1.9 1.7-1.9s1.4.9 1.7 1.9c.6 1.9.6 4.6 1.9 4.6 1.1 0 1.7-1.6 2.3-3.1C17.1 13 18 9.2 18 6.2 18 4.7 17.6 3 16 3c-1.2 0-2.4 1.1-3.7 1.1S12 3 12 3z"/></svg>
+            <span>Limpiezas</span>
+          </div>
+          <div class="service-tile">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l1.5 3.5L17 7l-3.5 1.5L12 12l-1.5-3.5L7 7l3.5-1.5z"/><path d="M19 14l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z"/></svg>
+            <span>Blanqueamiento</span>
+          </div>
+          <div class="service-tile">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span>Revisión</span>
+          </div>
+        </div>
+        <button class="primary-btn" onclick="goTo(1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          Reservar una cita
+        </button>
+        <p class="ghost-note">Paso 1 de 4 · Puedes cancelar en cualquier momento</p>
+      </div>
+
+      <!-- STEP 1: Select service -->
+      <div class="panel" id="panel-1">
+        <div class="step-meta">Paso 1 de 4 · Servicio</div>
+        <h2 class="step-title">¿Qué necesitas hoy?</h2>
+        <p class="step-desc">Todos los servicios incluyen consulta y examen inicial.</p>
+        <div class="option-list" id="serviceList"></div>
+        <button class="primary-btn" id="serviceNextBtn" onclick="confirmServiceAndNext()" disabled>Continuar</button>
+      </div>
+
+      <!-- STEP 2: Patient info -->
+      <div class="panel" id="panel-2">
+        <div class="step-meta">Paso 2 de 4 · Tus datos</div>
+        <h2 class="step-title">Cuéntanos quién eres</h2>
+        <p class="step-desc">Usaremos esto para confirmar tu cita.</p>
+        <div class="field-row">
+          <div class="field">
+            <label for="fName">Nombre</label>
+            <input type="text" id="fName" placeholder="Sarah">
+          </div>
+          <div class="field">
+            <label for="fLast">Apellido</label>
+            <input type="text" id="fLast" placeholder="Johnson">
+          </div>
+        </div>
+        <div class="field">
+          <label for="fPhone">Teléfono</label>
+          <input type="tel" id="fPhone" placeholder="(512) 555-0148">
+        </div>
+        <div class="field">
+          <label for="fEmail">Correo electrónico</label>
+          <input type="email" id="fEmail" placeholder="sarah@correo.com">
+        </div>
+        <div class="field">
+          <label for="fNote">Nota para el consultorio (opcional)</label>
+          <textarea id="fNote" rows="2" placeholder="Ej. sensibilidad al frío"></textarea>
+        </div>
+        <p class="error-text" id="patientError">Completa nombre, teléfono y correo para continuar.</p>
+        <button class="primary-btn" onclick="confirmPatientAndNext()">Continuar</button>
+      </div>
+
+      <!-- STEP 3: Date & time -->
+      <div class="panel" id="panel-3">
+        <div class="step-meta">Paso 3 de 4 · Fecha y hora</div>
+        <h2 class="step-title">Elige fecha y hora</h2>
+        <div class="cal-head">
+          <button class="cal-nav" onclick="shiftMonth(-1)">‹</button>
+          <div class="cal-month" id="calMonthLabel"></div>
+          <button class="cal-nav" onclick="shiftMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="times-label">Horarios disponibles</div>
+        <div class="time-grid" id="timeGrid"></div>
+        <button class="primary-btn coral" id="confirmApptBtn" onclick="goTo(4)" disabled>Confirmar cita</button>
+      </div>
+
+      <!-- STEP 4: Confirmation -->
+      <div class="panel" id="panel-4">
+        <div class="confirm-wrap">
+          <div class="check-badge">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2 class="confirm-title">Cita confirmada</h2>
+          <p class="confirm-sub">Se envió una confirmación a tu correo y teléfono.</p>
+          <div class="summary-box" id="summaryBox"></div>
+          <div class="confirm-actions">
+            <button class="secondary-btn" onclick="addToCalendar()">Añadir al calendario</button>
+            <button class="secondary-btn" onclick="alert('Panel de gestión de citas — próximamente.')">Gestionar cita</button>
+          </div>
+          <button class="new-booking" onclick="resetFlow()">Reservar otra cita</button>
+        </div>
+      </div>
+
+      </div><!-- /#view-patient -->
+
+      <!-- ============================================================
+           STAFF LOGIN — visual/prototype only, see BACKEND INTEGRATION
+           POINT #4 in the script for where the real API call goes
+           ============================================================ -->
+      <div class="view" id="view-staff-login">
+        <div class="step-meta">Personal de la clínica</div>
+        <h2 class="step-title">Staff Sign In</h2>
+        <p class="step-desc">Access the clinic scheduling dashboard.</p>
+
+        <form id="staffLoginForm" onsubmit="handleStaffSignIn(event)">
+          <div class="field">
+            <label for="staffEmail">Email</label>
+            <input type="email" id="staffEmail" placeholder="doctor@smiledental.com" autocomplete="username">
+          </div>
+          <div class="field">
+            <label for="staffPassword">Password</label>
+            <input type="password" id="staffPassword" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="field remember-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="rememberMe">
+              Remember me
+            </label>
+            <button type="button" class="link-btn" onclick="handleForgotPassword()">Forgot password?</button>
+          </div>
+          <p class="error-text" id="staffLoginError">Enter both your email and password.</p>
+          <button type="submit" class="primary-btn">Sign In</button>
+        </form>
+        <p class="ghost-note">Staff accounts are managed by the clinic administrator.</p>
+      </div>
+
+      <!-- ============================================================
+           STAFF DASHBOARD — shown once staff sign-in succeeds.
+           Data below is hardcoded for the demo; see BACKEND INTEGRATION
+           POINTS #6 and #7 in the script for where this connects to a
+           real API. Deeper admin tools (editing services, patient
+           records, full calendar management) are intentionally still
+           out of scope, per the current brief.
+           ============================================================ -->
+      <div class="view" id="view-staff-dashboard">
+        <div class="dash-header">
+          <div class="dash-title">
+            <div class="clinic-name">Smile Dental Clinic</div>
+            <div class="step-desc" style="margin:2px 0 0;">Admin Dashboard</div>
+          </div>
+          <div class="dash-header-right">
+            <span class="dash-date" id="dashDate"></span>
+            <button class="icon-btn" type="button" title="Notifications" onclick="alert('Notificaciones — próximamente.')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+            </button>
+            <button class="icon-btn" type="button" title="Settings" onclick="alert('Configuración — próximamente.')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1h.1a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+            </button>
+            <div class="avatar-badge" id="staffAvatarBadge">AD</div>
+            <button class="link-btn" type="button" onclick="handleSignOut()">Sign out</button>
+          </div>
+        </div>
+
+        <div class="dash-stats" id="dashStats"></div>
+
+        <div class="dash-grid">
+          <div class="dash-panel">
+            <div class="dash-panel-head">
+              <h3>Today's Appointments</h3>
+              <span class="dash-panel-meta" id="dashApptMeta"></span>
+            </div>
+            <div class="appt-list" id="apptList"></div>
+            <button class="link-btn" style="margin-top:12px;" onclick="alert('Vista completa de citas — próximamente.')">View all appointments</button>
+          </div>
+
+          <div class="dash-panel">
+            <div class="dash-panel-head"><h3>Clinic Overview</h3></div>
+            <div class="trend-label">Weekly Trend</div>
+            <div class="overview-chart">
+              <svg viewBox="0 0 200 50" width="100%" height="46" preserveAspectRatio="none">
+                <polyline points="0,34 20,30 40,36 60,25 80,28 100,20 120,26 140,16 160,20 180,8 200,13" fill="none" stroke="#0E5750" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="trend-note" id="trendNote"></div>
+
+            <div class="dash-divider"></div>
+
+            <div class="dash-panel-head"><h3 style="font-size:14px;">Staff on Duty</h3></div>
+            <div class="staff-list" id="staffList"></div>
+            <div class="next-appt-banner" id="nextApptBanner"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   SMILE DENTAL CLINIC — booking demo
+   -------------------------------------------------------------------------
+   Current state: fully client-side. All data below (services, taken slots)
+   is hardcoded so every button/step can be tested end to end with no
+   backend. Everything is written so a real backend can be dropped in with
+   minimal rewiring — see the "BACKEND INTEGRATION POINTS" comments marked
+   throughout this script for exactly where to plug in AWS.
+
+   PLANNED AWS ARCHITECTURE (see Smile Dental diagram provided):
+     PATIENT -> Website -> Booking System -> Backend / API -> Database -> STAFF DASHBOARD
+       -> API Gateway (REST endpoints, e.g. /services, /availability, /book, /auth/login)
+       -> Lambda functions (business logic / validation)
+       -> DynamoDB (appointments, patients, services, staff tables)
+       -> SNS / SES (notifies dentist's office by SMS/email on new booking)
+       -> Optional: Google Calendar sync via Lambda + OAuth
+
+   VIEWS (new, on top of the existing booking flow):
+     view-role            Home screen — choose "Patient" or "Staff"
+     view-patient         The original booking flow, untouched (panels 0-4)
+     view-staff-login     Staff sign-in form (mock auth, see POINT #4)
+     view-staff-dashboard Real dashboard UI (stats, today's appointments,
+                           clinic overview, staff on duty) — data is
+                           hardcoded for now, see POINTS #6 and #7
+
+   This file is organized in four clearly separated sections so a future
+   backend swap only touches the marked integration points:
+     1. NAVIGATION / VIEW MANAGEMENT
+     2. STAFF AUTH (currently mocked)
+     3. STAFF DASHBOARD (rendering + interactions, currently local-only)
+     4. PATIENT BOOKING FLOW (existing logic, unchanged)
+   ========================================================================= */
+
+const state = {
+  step: 0,
+  service: null,
+  patient: {},
+  date: null,   // {y, m, d}
+  time: null
+};
+
+// Which top-level view is showing: 'view-role' | 'view-patient' | 'view-staff-login' | 'view-staff-dashboard'
+let currentView = 'view-role';
+
+// Mock session for the staff prototype. Replace with a real token/session
+// object returned by the backend (see BACKEND INTEGRATION POINT #4).
+let staffSession = null;
+
+const TOTAL_STEPS = 4; // steps 1..4 shown in the dot tracker (0 is the entry screen, not tracked)
+
+/* ---- SERVICE DATA -------------------------------------------------------
+   BACKEND INTEGRATION POINT #1:
+   Replace this array with a call like:
+     const services = await fetch('/api/services').then(r => r.json());
+   Backed by: GET /services -> Lambda -> DynamoDB "Services" table
+--------------------------------------------------------------------------- */
+const SERVICES = [
+  { id: 'cleaning',  name: 'Limpieza General', duration: '45 min', price: '$80',  icon: 'tooth' },
+  { id: 'exam',      name: 'Examen Dental',    duration: '30 min', price: '$120', icon: 'tooth' },
+  { id: 'whitening', name: 'Blanqueamiento',   duration: '60 min', price: '$150', icon: 'spark' },
+  { id: 'emergency', name: 'Visita de Emergencia', duration: '30 min', price: '$200', icon: 'alert' }
+];
+
+/* ---- AVAILABILITY DATA ---------------------------------------------------
+   BACKEND INTEGRATION POINT #2:
+   Replace with:
+     const booked = await fetch(`/api/availability?date=${y}-${m}-${d}`).then(r => r.json());
+   Backed by: GET /availability -> Lambda -> DynamoDB "Appointments" table
+   (query by date, return which of the fixed daily slots are already taken)
+--------------------------------------------------------------------------- */
+const ALL_TIMES = ['9:00 AM', '10:00 AM', '11:30 AM', '2:00 PM', '3:30 PM'];
+const HARDCODED_BOOKED = { '11:30 AM': true }; // demo: this slot is always shown as booked
+
+const ICONS = {
+  tooth: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3c-2.2 0-3 1.1-4.3 1.1S5.2 3 4 3c-1.6 0-2 1.7-2 3.2 0 3 .9 6.8 2.1 9.7.6 1.5 1.2 3.1 2.3 3.1 1.3 0 1.3-2.7 1.9-4.6.3-1 .7-1.9 1.7-1.9s1.4.9 1.7 1.9c.6 1.9.6 4.6 1.9 4.6 1.1 0 1.7-1.6 2.3-3.1C17.1 13 18 9.2 18 6.2 18 4.7 17.6 3 16 3c-1.2 0-2.4 1.1-3.7 1.1S12 3 12 3z"/></svg>',
+  spark: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l1.5 3.5L17 7l-3.5 1.5L12 12l-1.5-3.5L7 7l3.5-1.5z"/></svg>',
+  alert: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+};
+
+/* ---- STAFF DASHBOARD DATA -------------------------------------------------
+   BACKEND INTEGRATION POINT #6:
+   Replace these three constants with real requests made right after login:
+     const summary = await fetch('/api/dashboard/summary').then(r => r.json());
+     const appts   = await fetch(`/api/dashboard/appointments?date=${today}`).then(r => r.json());
+     const staff   = await fetch('/api/staff/on-duty').then(r => r.json());
+   Backed by: Lambda/Express handlers reading the "Appointments", "Patients"
+   and "Staff" tables (see the SQL schema delivered alongside this file).
+----------------------------------------------------------------------------- */
+const DASHBOARD_STATS = [
+  { label: 'Appointments Today', value: 18, delta: '+3 vs yesterday', tone: 'positive', icon: 'calendar' },
+  { label: 'New Patients',       value: 5,  delta: '+2 this week',    tone: 'positive', icon: 'personPlus' },
+  { label: 'Completed',          value: 12, delta: '67% completion rate', tone: 'neutral', icon: 'check' },
+  { label: 'Cancellations',      value: 2,  delta: '-1 vs yesterday', tone: 'negative', icon: 'xmark' }
+];
+
+const TODAY_APPOINTMENTS = [
+  { id: 1, time: '9:00 AM',  name: 'John Smith',      detail: 'Cleaning · Routine',      urgent: false, status: 'pending' },
+  { id: 2, time: '10:00 AM', name: 'Maria Garcia',    detail: 'Dental Exam · Checkup',    urgent: false, status: 'pending' },
+  { id: 3, time: '11:30 AM', name: 'David Johnson',   detail: 'Whitening · Cosmetic',     urgent: false, status: 'pending' },
+  { id: 4, time: '2:00 PM',  name: 'Sarah Williams',  detail: 'Emergency Visit · Pain',   urgent: true,  status: 'pending' }
+];
+
+const STAFF_ON_DUTY = [
+  { name: 'Dr. Emily Chen',   role: 'Dentist · On site',  initials: 'EC' },
+  { name: 'Nurse Alex Lopez', role: 'Hygienist · On site', initials: 'AL' }
+];
+
+const WEEKLY_TREND_NOTE = 'Most common: Cleaning (42%)';
+
+const DASH_ICONS = {
+  calendar:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  personPlus:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M19 8v5M16.5 10.5h5"/></svg>',
+  check:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+  xmark:     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>'
+};
+
+/* =========================================================================
+   1. NAVIGATION / VIEW MANAGEMENT
+   Everything about which top-level screen (Home / Patient / Staff) is
+   visible lives here. Keeping it separate means the booking logic below
+   and the auth logic further down don't need to know about each other.
+   ========================================================================= */
+
+const VIEW_IDS = ['view-role', 'view-patient', 'view-staff-login', 'view-staff-dashboard'];
+
+function showView(viewId){
+  VIEW_IDS.forEach(id => {
+    document.getElementById(id).classList.toggle('active', id === viewId);
+  });
+  currentView = viewId;
+  document.querySelector('.stage').classList.toggle('stage--wide', viewId === 'view-staff-dashboard');
+  updateChrome();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Keeps the shared back-button and step-dot tracker in sync with whichever
+// view/step is currently showing.
+function updateChrome(){
+  const backBtn = document.getElementById('backBtn');
+  if(currentView === 'view-role'){
+    backBtn.classList.remove('show');
+    document.getElementById('stepTrack').innerHTML = '';
+  } else if(currentView === 'view-patient'){
+    backBtn.classList.toggle('show', state.step < 4); // hidden on the final confirmation screen
+    renderTracker();
+  } else {
+    // staff login / staff dashboard
+    backBtn.classList.add('show');
+    document.getElementById('stepTrack').innerHTML = '';
+  }
+}
+
+// One click back to Home from anywhere (also reachable via the clinic logo).
+function goHome(){
+  showView('view-role');
+}
+
+// "Continue as Patient" — enters the existing booking flow at its home step.
+function enterPatientFlow(){
+  showView('view-patient');
+  showPanel(0);
+}
+
+// "Staff Login"
+function enterStaffLogin(){
+  document.getElementById('staffLoginError').classList.remove('show');
+  showView('view-staff-login');
+}
+
+// Single back-button handler for the whole app: what "back" means depends
+// on which view/step we're in.
+function handleBack(){
+  if(currentView === 'view-patient'){
+    if(state.step === 0){
+      showView('view-role');
+    } else {
+      showPanel(state.step - 1);
+    }
+  } else if(currentView === 'view-staff-login'){
+    showView('view-role');
+  } else if(currentView === 'view-staff-dashboard'){
+    handleSignOut();
+  }
+}
+
+/* ---------------- rendering: step tracker (patient flow only) ---------------- */
+function renderTracker(){
+  const track = document.getElementById('stepTrack');
+  track.innerHTML = '';
+  if(state.step === 0){ return; }
+  for(let i=1;i<=TOTAL_STEPS;i++){
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i < state.step ? ' done' : '') + (i === state.step ? ' active' : '');
+    track.appendChild(dot);
+  }
+}
+
+function showPanel(n){
+  document.querySelectorAll('#view-patient .panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  state.step = n;
+  updateChrome();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goTo(n){
+  if(n === 4){ submitBooking(); return; }
+  showPanel(n);
+  if(n === 1) renderServiceList();
+  if(n === 3) renderCalendar();
+}
+
+/* =========================================================================
+   2. STAFF AUTH — currently mocked
+   This is a visual prototype only: no real credentials are stored or
+   checked in this file. Wire it up to a real backend by replacing the
+   body of handleStaffSignIn() — see BACKEND INTEGRATION POINT #4.
+   ========================================================================= */
+
+function handleStaffSignIn(event){
+  event.preventDefault();
+  const email = document.getElementById('staffEmail').value.trim();
+  const password = document.getElementById('staffPassword').value;
+  const remember = document.getElementById('rememberMe').checked;
+  const errEl = document.getElementById('staffLoginError');
+
+  if(!email || !password){
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
+
+  /* BACKEND INTEGRATION POINT #4 — real staff authentication:
+     const res = await fetch('/api/auth/login', {
+       method: 'POST',
+       headers: {'Content-Type':'application/json'},
+       body: JSON.stringify({ email, password, remember })
+     });
+     const data = await res.json(); // { token, staffName, role }
+     Backed by: POST /api/auth/login -> Lambda -> validates against a
+     DynamoDB/Cognito "Staff" table and returns a session token.
+     On success, store the token (e.g. httpOnly cookie set by the backend,
+     not localStorage) and redirect into the real dashboard.
+
+     For now, this is mocked: any non-empty email/password "signs in". */
+  staffSession = { email, remember, signedInAt: new Date().toISOString() };
+  renderDashboard();
+  showView('view-staff-dashboard');
+}
+
+function handleForgotPassword(){
+  // BACKEND INTEGRATION POINT #5 — trigger a real reset email:
+  // POST /api/auth/forgot-password { email } -> Lambda -> SES reset email.
+  alert('Un enlace para restablecer tu contraseña será enviado a tu correo. (Prototipo — sin envío real todavía.)');
+}
+
+function handleSignOut(){
+  staffSession = null;
+  document.getElementById('staffLoginForm').reset();
+  showView('view-role');
+}
+
+/* =========================================================================
+   3. STAFF DASHBOARD — rendering + interactions
+   Shown once sign-in succeeds (see handleStaffSignIn above). All data
+   comes from the DASHBOARD_STATS / TODAY_APPOINTMENTS / STAFF_ON_DUTY
+   constants declared earlier; see BACKEND INTEGRATION POINT #6/#7 for
+   where a real API replaces them.
+   ========================================================================= */
+
+function renderDashboard(){
+  const dateStr = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  document.getElementById('dashDate').textContent = `Admin · Today, ${dateStr}`;
+  document.getElementById('staffAvatarBadge').textContent =
+    staffSession && staffSession.email ? staffSession.email.slice(0,2).toUpperCase() : 'AD';
+  document.getElementById('trendNote').textContent = WEEKLY_TREND_NOTE;
+
+  renderDashStats();
+  renderApptList();
+  renderStaffList();
+  updateApptMeta();
+  updateNextApptBanner();
+}
+
+function renderDashStats(){
+  const wrap = document.getElementById('dashStats');
+  wrap.innerHTML = '';
+  DASHBOARD_STATS.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `
+      <div class="stat-icon">${DASH_ICONS[s.icon]}</div>
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-delta ${s.tone}">${s.delta}</div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function renderApptList(){
+  const wrap = document.getElementById('apptList');
+  wrap.innerHTML = '';
+  TODAY_APPOINTMENTS.forEach(appt => {
+    const row = document.createElement('div');
+    row.className = 'appt-row' + (appt.status === 'cancelled' ? ' cancelled' : '');
+
+    let actionsHtml = '';
+    if(appt.status === 'confirmed'){
+      actionsHtml = '<span class="tag-status tag-confirmed">Confirmed</span>';
+    } else if(appt.status === 'cancelled'){
+      actionsHtml = '<span class="tag-status tag-cancelled">Cancelled</span>';
+    } else {
+      actionsHtml = `
+        <button class="appt-btn confirm" data-id="${appt.id}">Confirm</button>
+        <button class="appt-btn reschedule" data-id="${appt.id}">Reschedule</button>
+        <button class="appt-btn cancel" data-id="${appt.id}">Cancel</button>
+      `;
+    }
+
+    row.innerHTML = `
+      <div class="appt-time">${appt.time}</div>
+      <div class="appt-info">
+        <div class="appt-name">${appt.name}${appt.urgent && appt.status === 'pending' ? '<span class="tag-urgent">Urgent</span>' : ''}</div>
+        <div class="appt-detail">${appt.detail}</div>
+      </div>
+      <div class="appt-actions">${actionsHtml}</div>
+    `;
+    wrap.appendChild(row);
+  });
+
+  wrap.querySelectorAll('.appt-btn.confirm').forEach(btn => {
+    btn.onclick = () => updateAppointmentStatus(Number(btn.dataset.id), 'confirmed');
+  });
+  wrap.querySelectorAll('.appt-btn.cancel').forEach(btn => {
+    btn.onclick = () => updateAppointmentStatus(Number(btn.dataset.id), 'cancelled');
+  });
+  wrap.querySelectorAll('.appt-btn.reschedule').forEach(btn => {
+    btn.onclick = () => alert('Reprogramar cita — próximamente (reutilizará el paso de fecha/hora del flujo de reservas).');
+  });
+}
+
+function updateAppointmentStatus(id, status){
+  /* BACKEND INTEGRATION POINT #7 — persist the status change:
+     await fetch(`/api/appointments/${id}`, {
+       method: 'PATCH',
+       headers: {'Content-Type':'application/json'},
+       body: JSON.stringify({ status })
+     });
+     Backed by: PATCH /api/appointments/:id -> validates the staff session
+     -> updates the "appointments.status" column -> on cancellation, also
+     flips the linked "dentist_availability.is_booked" row back to false
+     so the slot becomes bookable again. For now this only updates the
+     local TODAY_APPOINTMENTS array in the browser. */
+  const appt = TODAY_APPOINTMENTS.find(a => a.id === id);
+  if(appt) appt.status = status;
+  renderApptList();
+  updateApptMeta();
+  updateNextApptBanner();
+}
+
+function updateApptMeta(){
+  const scheduled = TODAY_APPOINTMENTS.filter(a => a.status !== 'cancelled').length;
+  document.getElementById('dashApptMeta').textContent = `${scheduled} scheduled`;
+}
+
+function updateNextApptBanner(){
+  const next = TODAY_APPOINTMENTS.find(a => a.status !== 'cancelled');
+  const banner = document.getElementById('nextApptBanner');
+  banner.textContent = next
+    ? `Next: ${next.name} at ${next.time}`
+    : 'No upcoming appointments today.';
+}
+
+function renderStaffList(){
+  const wrap = document.getElementById('staffList');
+  wrap.innerHTML = '';
+  STAFF_ON_DUTY.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'staff-row';
+    row.innerHTML = `
+      <div class="staff-avatar">${s.initials}</div>
+      <div class="staff-info">
+        <div class="staff-name">${s.name}</div>
+        <div class="staff-role">${s.role}</div>
+      </div>
+      <span class="staff-active-dot" title="Active"></span>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+/* =========================================================================
+   4. PATIENT BOOKING FLOW — existing logic, unchanged
+   ========================================================================= */
+
+/* ---------------- STEP 1: services ---------------- */
+function renderServiceList(){
+  const list = document.getElementById('serviceList');
+  list.innerHTML = '';
+  SERVICES.forEach(s => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'option-card' + (state.service && state.service.id === s.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="option-left">
+        <div class="option-icon">${ICONS[s.icon]}</div>
+        <div>
+          <div class="option-name">${s.name}</div>
+          <div class="option-meta">${s.duration}</div>
+        </div>
+      </div>
+      <div class="option-price">${s.price}</div>
+    `;
+    card.onclick = () => {
+      state.service = s;
+      renderServiceList();
+      document.getElementById('serviceNextBtn').disabled = false;
+    };
+    list.appendChild(card);
+  });
+}
+
+function confirmServiceAndNext(){
+  if(!state.service) return;
+  goTo(2);
+}
+
+/* ---------------- STEP 2: patient info ---------------- */
+function confirmPatientAndNext(){
+  const first = document.getElementById('fName').value.trim();
+  const last = document.getElementById('fLast').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const note = document.getElementById('fNote').value.trim();
+  const err = document.getElementById('patientError');
+
+  if(!first || !phone || !email){
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  state.patient = { first, last, phone, email, note };
+  goTo(3);
+}
+
+/* ---------------- STEP 3: date & time ---------------- */
+let calRef = new Date(2026, 8, 1); // September 2026, matches the reference mockup
+
+function shiftMonth(delta){
+  calRef = new Date(calRef.getFullYear(), calRef.getMonth() + delta, 1);
+  state.date = null;
+  state.time = null;
+  document.getElementById('confirmApptBtn').disabled = true;
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('calMonthLabel').textContent = `${monthNames[calRef.getMonth()]} ${calRef.getFullYear()}`;
+
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const year = calRef.getFullYear(), month = calRef.getMonth();
+  const firstDay = new Date(year, month, 1);
+  let startOffset = firstDay.getDay() - 1; // Monday-first
+  if(startOffset < 0) startOffset = 6;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  for(let i=0;i<startOffset;i++){
+    const blank = document.createElement('div');
+    grid.appendChild(blank);
+  }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const cell = document.createElement('div');
+    const thisDate = new Date(year, month, d);
+    const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isToday = thisDate.toDateString() === today.toDateString();
+    const isSelected = state.date && state.date.y === year && state.date.m === month && state.date.d === d;
+
+    cell.className = 'cal-day' + (isPast ? ' disabled' : '') + (isToday ? ' today' : '') + (isSelected ? ' selected' : '');
+    cell.textContent = d;
+    if(!isPast){
+      cell.onclick = () => {
+        state.date = { y: year, m: month, d };
+        state.time = null;
+        document.getElementById('confirmApptBtn').disabled = true;
+        renderCalendar();
+        renderTimes();
+      };
+    }
+    grid.appendChild(cell);
+  }
+
+  renderTimes();
+}
+
+function renderTimes(){
+  const grid = document.getElementById('timeGrid');
+  grid.innerHTML = '';
+  ALL_TIMES.forEach(t => {
+    const slot = document.createElement('div');
+    const isBooked = !!HARDCODED_BOOKED[t];
+    const isSelected = state.time === t;
+    slot.className = 'time-slot' + (isBooked ? ' booked' : '') + (isSelected ? ' selected' : '');
+    slot.textContent = t;
+    if(!isBooked && state.date){
+      slot.onclick = () => {
+        state.time = t;
+        renderTimes();
+        document.getElementById('confirmApptBtn').disabled = false;
+      };
+    }
+    grid.appendChild(slot);
+  });
+}
+
+/* ---------------- STEP 4: confirm & submit ---------------- */
+function submitBooking(){
+  /* BACKEND INTEGRATION POINT #3 — the actual booking write:
+     const res = await fetch('/api/book', {
+       method: 'POST',
+       headers: {'Content-Type':'application/json'},
+       body: JSON.stringify({ service: state.service, patient: state.patient, date: state.date, time: state.time })
+     });
+     Backed by: POST /book -> Lambda ->
+       1. writes a new item to DynamoDB "Appointments" table
+       2. publishes to an SNS topic (or calls SES) so the dentist's office
+          gets an SMS/email the instant a patient books
+       3. optionally syncs to the clinic's Google Calendar
+     For now we just render the confirmation screen from local state. */
+
+  const monthNames = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const d = state.date;
+  const dateObj = new Date(d.y, d.m, d.d);
+  const dateStr = `${dayNames[dateObj.getDay()]}, ${d.d} de ${monthNames[d.m]}`;
+
+  document.getElementById('summaryBox').innerHTML = `
+    <div class="summary-row">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      <div><span class="s-label">Clínica</span><span class="s-value">Smile Dental Clinic</span></div>
+    </div>
+    <div class="summary-row">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+      <div><span class="s-label">Fecha</span><span class="s-value" style="text-transform:capitalize">${dateStr}</span></div>
+    </div>
+    <div class="summary-row">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <div><span class="s-label">Hora</span><span class="s-value">${state.time} · ${state.service.duration}</span></div>
+    </div>
+    <div class="summary-row">
+      ${ICONS[state.service.icon]}
+      <div><span class="s-label">Servicio</span><span class="s-value">${state.service.name} · ${state.service.price}</span></div>
+    </div>
+    <div class="summary-row">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+      <div><span class="s-label">Paciente</span><span class="s-value">${state.patient.first} ${state.patient.last}</span></div>
+    </div>
+  `;
+
+  showPanel(4);
+}
+
+function addToCalendar(){
+  alert('Próximamente: exportar a Google Calendar / archivo .ics.');
+}
+
+function resetFlow(){
+  state.service = null;
+  state.patient = {};
+  state.date = null;
+  state.time = null;
+  document.getElementById('fName').value = '';
+  document.getElementById('fLast').value = '';
+  document.getElementById('fPhone').value = '';
+  document.getElementById('fEmail').value = '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('serviceNextBtn').disabled = true;
+  document.getElementById('confirmApptBtn').disabled = true;
+  calRef = new Date(2026, 8, 1);
+  showPanel(0);
+}
+
+/* ---------------- app boot ---------------- */
+showView('view-role');
+</script>
+</body>
+</html>
